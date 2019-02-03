@@ -2,7 +2,7 @@
 
 custom lightweight protocol based on sockets
 
-###server
+### server
 
 ```javascript
 const { server } = require('socket-wrapper');
@@ -13,7 +13,7 @@ server(8000, async (data) => {
 });
 ```
 
-###client
+### client
 
 ```javascript
 const { request } = require('socket-wrapper');
