@@ -27,7 +27,7 @@ for (let i = 0; i < 1000; i++) {
   });
 }
 
-require('fs').writeFile('testData.json', JSON.stringify(testData), () => {});
+// require('fs').writeFile('testData.json', JSON.stringify(testData), () => {});
 
 server(8000, async (data) => {
   console.log('data from client', data.length);
