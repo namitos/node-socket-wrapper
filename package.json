@@ -8,12 +8,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/namitos/socket-wrapper.git"
+    "url": "git+https://github.com/namitos/node-socket-wrapper.git"
   },
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/namitos/socket-wrapper/issues"
+    "url": "https://github.com/namitos/node-socket-wrapper/issues"
   },
-  "homepage": "https://github.com/namitos/socket-wrapper#readme"
+  "homepage": "https://github.com/namitos/node-socket-wrapper#readme"
 }
