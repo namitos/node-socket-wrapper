@@ -49,10 +49,14 @@ function server(port, cb) {
         console.error('constructData cb exception', err);
       }
     });
-    socket.on('server error', (err) => {
-      console.log('server error', err);
+    socket.on('error', (err) => {
+      console.log('socket error', err);
     });
+
     //TODO: disconnect by timeout
+  });
+  server.on('error', (err) => {
+    console.log('server error', err);
   });
   server.listen(port);
 }
