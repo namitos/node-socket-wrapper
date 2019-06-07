@@ -1,6 +1,6 @@
 const net = require('net');
 
-const headerSize = 4; //for 32bit int
+const headerSize = 8; //for 2 32bit ints
 
 function constructData(socket, cb) {
   let parts = [];
@@ -12,6 +12,7 @@ function constructData(socket, cb) {
     sizeActual += part.length;
     if (partI === 0) {
       sizeExpected = part.readUInt32BE(0);
+      type = part.readUInt32BE(4);
       sizeActual -= headerSize;
       part = part.slice(headerSize, part.length);
       // console.log('part', part.toString());
@@ -20,15 +21,16 @@ function constructData(socket, cb) {
     partI++;
     if (sizeActual >= sizeExpected) {
       let resultBuffer = Buffer.concat(parts);
-      cb(JSON.parse(resultBuffer.toString()));
+      cb({ data: JSON.parse(resultBuffer.toString()), type });
     }
   });
 }
 
-function writeData(socket, data) {
+function writeData(socket, { data, type = 0 }) {
   let body = Buffer.from(JSON.stringify(data));
   let header = Buffer.alloc(headerSize);
   header.writeUInt32BE(body.length, 0);
+  header.writeUInt32BE(type, 4);
   socket.write(Buffer.concat([header, body]));
 }
 
@@ -39,9 +41,9 @@ function writeData(socket, data) {
  */
 function server(port, cb) {
   let server = net.createServer((socket) => {
-    constructData(socket, async (data) => {
+    constructData(socket, async ({ data, type }) => {
       try {
-        let r = await cb(data);
+        let r = await cb({ data, type });
         if (r) {
           writeData(socket, r);
         }
@@ -66,7 +68,7 @@ function server(port, cb) {
  * @param {Object} param0
  * @param {Object} data
  */
-async function request({ host, port }, data) {
+async function request({ host, port }, { data, type }) {
   if (!data) {
     throw { type: 'SocketError', text: 'data is required' };
   }
@@ -74,11 +76,11 @@ async function request({ host, port }, data) {
     try {
       let socket = new net.Socket();
       socket.connect(port, host, () => {
-        writeData(socket, data);
+        writeData(socket, { data, type });
       });
 
-      constructData(socket, async (data) => {
-        resolve(data);
+      constructData(socket, async ({ data, type }) => {
+        resolve({ data, type });
         socket.destroy();
       });
 
