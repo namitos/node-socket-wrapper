@@ -26,7 +26,7 @@ function constructData(socket, cb) {
   });
 }
 
-function writeData(socket, { data, type = 0 }) {
+function writeData(socket, { data = {}, type = 0 }) {
   let body = Buffer.from(JSON.stringify(data));
   let header = Buffer.alloc(headerSize);
   header.writeUInt32BE(body.length, 0);

@@ -31,7 +31,7 @@ for (let i = 0; i < 1000; i++) {
 
 server(8000, async ({ data, type }) => {
   console.log(`data from client ${data.length} type ${type}`);
-  return { data, type: 123 };
+  return { data, type: 11 };
 });
 
 (async () => {
