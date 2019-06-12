@@ -78,14 +78,20 @@ async function request({ host, port }, { data, type }) {
       socket.connect(port, host, () => {
         writeData(socket, { data, type });
       });
-
+      alreadyClosed = false;
       constructData(socket, async ({ data, type }) => {
         resolve({ data, type });
         socket.destroy();
+        alreadyClosed = true;
       });
-
       socket.on('error', (err) => {
+        console.error(err);
         reject({ type: 'SocketError', err });
+      });
+      socket.on('close', (err) => {
+        if (!alreadyClosed) {
+          reject({ type: 'SocketError', text: 'socket closed', err });
+        }
       });
     } catch (err) {
       reject({ type: 'SocketError', err, catch: true });
