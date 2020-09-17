@@ -8,25 +8,27 @@ function constructData(socket, cb) {
   let sizeExpected = 0;
   let sizeActual = 0;
   socket.on('data', (part) => {
-    // console.log('constructData ondata', part.toString());
     sizeActual += part.length;
     if (partI === 0) {
       sizeExpected = part.readUInt32BE(0);
       type = part.readUInt32BE(4);
       sizeActual -= headerSize;
       part = part.slice(headerSize, part.length);
-      // console.log('part', part.toString());
     }
     parts.push(part);
     partI++;
     if (sizeActual >= sizeExpected) {
-      let resultBuffer = Buffer.concat(parts);
-      cb({ data: JSON.parse(resultBuffer.toString()), type });
+      try {
+        let resultBuffer = Buffer.concat(parts).toString();
+        cb({data: JSON.parse(resultBuffer), type});
+      } catch (err) {
+        console.log(err, resultBuffer.substr(0, 1000))
+      }
     }
   });
 }
 
-function writeData(socket, { data = {}, type = 0 }) {
+function writeData(socket, {data = {}, type = 0}) {
   let body = Buffer.from(JSON.stringify(data));
   let header = Buffer.alloc(headerSize);
   header.writeUInt32BE(body.length, 0);
@@ -41,9 +43,9 @@ function writeData(socket, { data = {}, type = 0 }) {
  */
 function server(port, cb) {
   let server = net.createServer((socket) => {
-    constructData(socket, async ({ data, type }) => {
+    constructData(socket, async ({data, type}) => {
       try {
-        let r = await cb({ data, type });
+        let r = await cb({data, type});
         if (r) {
           writeData(socket, r);
         }
@@ -68,35 +70,35 @@ function server(port, cb) {
  * @param {Object} param0
  * @param {Object} data
  */
-async function request({ host, port }, { data, type }) {
+async function request({host, port}, {data, type}) {
   if (!data) {
-    throw { type: 'SocketError', text: 'data is required' };
+    throw {type: 'SocketError', text: 'data is required'};
   }
   return new Promise((resolve, reject) => {
     try {
       let socket = new net.Socket();
       socket.connect(port, host, () => {
-        writeData(socket, { data, type });
+        writeData(socket, {data, type});
       });
       alreadyClosed = false;
-      constructData(socket, async ({ data, type }) => {
-        resolve({ data, type });
+      constructData(socket, async ({data, type}) => {
+        resolve({data, type});
         socket.destroy();
         alreadyClosed = true;
       });
       socket.on('error', (err) => {
         console.error(err);
-        reject({ type: 'SocketError', err });
+        reject({type: 'SocketError', err});
       });
       socket.on('close', (err) => {
         if (!alreadyClosed) {
-          reject({ type: 'SocketError', text: 'socket closed', err });
+          reject({type: 'SocketError', text: 'socket closed', err});
         }
       });
     } catch (err) {
-      reject({ type: 'SocketError', err, catch: true });
+      reject({type: 'SocketError', err, catch: true});
     }
   });
 }
 
-module.exports = { server, request };
+module.exports = {server, request};
