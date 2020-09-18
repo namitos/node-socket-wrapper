@@ -1,6 +1,6 @@
 const net = require('net');
 
-const headerSize = 8; //for 2 32bit ints
+const headerSize = 8 * 3; //for 3 64bit ints
 
 function constructData(socket, cb) {
   let parts = [];
@@ -10,8 +10,8 @@ function constructData(socket, cb) {
   socket.on('data', (part) => {
     sizeActual += part.length;
     if (partI === 0) {
-      sizeExpected = part.readUInt32BE(0);
-      type = part.readUInt32BE(4);
+      sizeExpected = part.readBigUInt64BE(0);
+      type = part.readBigUInt64BE(8);
       sizeActual -= headerSize;
       part = part.slice(headerSize, part.length);
     }
@@ -22,7 +22,7 @@ function constructData(socket, cb) {
         let resultBuffer = Buffer.concat(parts).toString();
         cb({data: JSON.parse(resultBuffer), type});
       } catch (err) {
-        console.log(err, parts[0].toString().substr(0, 1000))
+        console.log(err, resultBuffer.substr(0, 1000))
       }
     }
   });
@@ -31,8 +31,8 @@ function constructData(socket, cb) {
 function writeData(socket, {data = {}, type = 0}) {
   let body = Buffer.from(JSON.stringify(data));
   let header = Buffer.alloc(headerSize);
-  header.writeUInt32BE(body.length, 0);
-  header.writeUInt32BE(type, 4);
+  header.writeBigUInt64BE(BigInt(body.length), 0);
+  header.writeBigUInt64BE(BigInt(type), 8);
   socket.write(Buffer.concat([header, body]));
 }
 
