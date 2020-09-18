@@ -22,7 +22,7 @@ function constructData(socket, cb) {
         let resultBuffer = Buffer.concat(parts).toString();
         cb({data: JSON.parse(resultBuffer), type});
       } catch (err) {
-        console.log(err, resultBuffer.substr(0, 1000))
+        console.log(err, parts[0].toString().substr(0, 1000))
       }
     }
   });
